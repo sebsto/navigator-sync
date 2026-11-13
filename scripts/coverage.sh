@@ -1,6 +1,9 @@
 #!/bin/zsh
 # Run the test suite with coverage and fail if NavigatorSyncCore line coverage
 # is below the threshold (Requirement 9.5). Default threshold 80%.
+#
+# Coverage is measured only over Sources/NavigatorSyncCore (the library under
+# test); test files and the swift-subprocess dependency are excluded.
 set -euo pipefail
 THRESHOLD="${1:-80}"
 
@@ -8,31 +11,17 @@ swift test --enable-code-coverage
 
 BIN=$(swift build --show-bin-path)
 PROF="$BIN/codecov/default.profdata"
-# Find the test bundle binary.
-XCTEST=$(find "$BIN" -name '*PackageTests.xctest' -maxdepth 2 | head -1)
-if [[ -d "$XCTEST" ]]; then
-  TESTBIN="$XCTEST/Contents/MacOS/$(basename "${XCTEST%.xctest}")"
-else
-  TESTBIN="$XCTEST"
-fi
+XCTEST=$(find "$BIN" -name '*.xctest' | head -1)
+TESTBIN="$XCTEST/Contents/MacOS/$(basename "${XCTEST%.xctest}")"
 
-PCT=$(xcrun llvm-cov report "$TESTBIN" \
-  -instr-profile "$PROF" \
-  -ignore-filename-regex='(Tests|\.build)/' \
-  2>/dev/null | awk '/NavigatorSyncCore/ {f=1} END {} f && /TOTAL/ {print $10}' | tr -d '%')
-
-# Fallback: TOTAL line of the whole report.
-if [[ -z "${PCT:-}" ]]; then
-  PCT=$(xcrun llvm-cov report "$TESTBIN" -instr-profile "$PROF" \
-    -ignore-filename-regex='(Tests|\.build)/' 2>/dev/null \
-    | awk '/^TOTAL/ {print $10}' | tr -d '%')
-fi
+PCT=$(xcrun llvm-cov report "$TESTBIN" -instr-profile "$PROF" 2>/dev/null \
+  | awk '/Sources\/NavigatorSyncCore\// {tot+=$8; miss+=$9}
+         END { if (tot > 0) printf "%.2f", (tot-miss)*100.0/tot; else print "" }')
 
 echo "NavigatorSyncCore line coverage: ${PCT:-unknown}% (threshold ${THRESHOLD}%)"
 if [[ -z "${PCT:-}" ]]; then
   echo "could not determine coverage" >&2; exit 2
 fi
-# Integer compare (coverage reported to 2dp; compare the integer part).
 if (( ${PCT%.*} < THRESHOLD )); then
   echo "FAIL: coverage below ${THRESHOLD}%" >&2; exit 1
 fi

@@ -2,7 +2,7 @@ import Foundation
 
 /// One row of `jj bookmark list --all-remotes -T '<name>\t<remote>\t<commit>\n'`.
 /// `remote` is nil for a local bookmark (the template's remote field is empty).
-public struct BookmarkRow: Sendable, Equatable {
+public nonisolated struct BookmarkRow: Sendable, Equatable {
     public let name: String
     public let remote: String?
     public let commitID: String
@@ -17,7 +17,7 @@ public struct BookmarkRow: Sendable, Equatable {
 /// Pure parsers for the machine-readable `jj` template output the sync engine
 /// relies on. Human-formatted output is never parsed; every call site uses an
 /// explicit `-T` template with tab/newline delimiters.
-public enum JJParser {
+public nonisolated enum JJParser {
 
     /// Parses the conflict probe
     /// `jj log --no-graph -r '@' -T 'if(conflict,"1","0") ++ "\n"'`.

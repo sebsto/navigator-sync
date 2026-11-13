@@ -1,13 +1,13 @@
 import Foundation
 
 /// Sign-in state reported by the Navigator client.
-public enum SignInState: Sendable, Equatable {
+public nonisolated enum SignInState: Sendable, Equatable {
     case signedIn(Identity)
     case signedOut
 }
 
 /// Errors from the Navigator client.
-public enum NavigatorError: Error, Sendable, Equatable {
+public nonisolated enum NavigatorError: Error, Sendable, Equatable {
     case notSignedIn
     case httpStatus(Int)
     case malformedResponse
@@ -15,19 +15,19 @@ public enum NavigatorError: Error, Sendable, Equatable {
 
 /// Talks to Navigator: sign-in state via the CLI, and the user's matters via
 /// the REST API (`GET /app/api/projects`). Behind a protocol for fakes.
-public protocol NavigatorClient: Sendable {
-    func whoami() async throws -> SignInState
-    func listMatters() async throws -> [MatterDescriptor]
+public nonisolated protocol NavigatorClient: Sendable {
+    nonisolated func whoami() async throws -> SignInState
+    nonisolated func listMatters() async throws -> [MatterDescriptor]
 }
 
 /// Abstracts an HTTP GET so the REST path is testable without a network.
-public protocol HTTPGetting: Sendable {
+public nonisolated protocol HTTPGetting: Sendable {
     /// Returns (body, statusCode) for a GET with a bearer token.
-    func get(url: URL, bearer: String?) async throws -> (Data, Int)
+    nonisolated func get(url: URL, bearer: String?) async throws -> (Data, Int)
 }
 
 /// `HTTPGetting` backed by `URLSession`.
-public struct URLSessionHTTP: HTTPGetting {
+public nonisolated struct URLSessionHTTP: HTTPGetting {
     public init() {}
     public nonisolated func get(url: URL, bearer: String?) async throws -> (Data, Int) {
         var request = URLRequest(url: url)
@@ -54,7 +54,7 @@ struct ProjectRow: Decodable {
 
 /// `NavigatorClient` using the `navigator` CLI for `whoami` and the REST API for
 /// matter discovery.
-public struct SubprocessNavigatorClient: NavigatorClient {
+public nonisolated struct SubprocessNavigatorClient: NavigatorClient {
     private let runner: any CommandRunning
     private let navigator: URL
     private let http: any HTTPGetting
@@ -160,7 +160,7 @@ public struct SubprocessNavigatorClient: NavigatorClient {
 
 extension String {
     /// Returns the substring between the first `open` and the next `close`.
-    fileprivate func firstMatch(between open: Character, and close: Character) -> String? {
+    fileprivate nonisolated func firstMatch(between open: Character, and close: Character) -> String? {
         guard let o = firstIndex(of: open) else { return nil }
         let afterOpen = index(after: o)
         guard let c = self[afterOpen...].firstIndex(of: close) else { return nil }

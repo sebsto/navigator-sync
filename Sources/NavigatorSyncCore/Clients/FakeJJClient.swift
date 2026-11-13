@@ -10,6 +10,7 @@ public actor FakeJJClient: JJClient {
 
     private var scriptedState: RepoState
     private var scriptedPush: PushOutcome
+    private var validRepo: Bool
     private var fetchError: (@Sendable () -> Error)?
     private var statusError: (@Sendable () -> Error)?
     private var calls: [Call] = []
@@ -17,14 +18,17 @@ public actor FakeJJClient: JJClient {
     public init(
         state: RepoState = RepoState(
             hasConflict: false, localAheadOfRemote: false, remoteChangedSinceLastFetch: false),
-        push: PushOutcome = .pushed
+        push: PushOutcome = .pushed,
+        validRepo: Bool = false
     ) {
         self.scriptedState = state
         self.scriptedPush = push
+        self.validRepo = validRepo
     }
 
     public func setState(_ s: RepoState) { scriptedState = s }
     public func setPush(_ p: PushOutcome) { scriptedPush = p }
+    public func setValidRepo(_ v: Bool) { validRepo = v }
     public func setFetchError(_ e: (@Sendable () -> Error)?) { fetchError = e }
     public func setStatusError(_ e: (@Sendable () -> Error)?) { statusError = e }
     public func recordedCalls() -> [Call] { calls }
@@ -53,6 +57,6 @@ public actor FakeJJClient: JJClient {
     }
     public func isValidRepo(_ dir: URL) async -> Bool {
         calls.append(.isValid)
-        return true
+        return validRepo
     }
 }

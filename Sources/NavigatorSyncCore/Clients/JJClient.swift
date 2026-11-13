@@ -1,7 +1,7 @@
 import Foundation
 
 /// The outcome of a `jj git push`.
-public enum PushOutcome: Sendable, Equatable {
+public nonisolated enum PushOutcome: Sendable, Equatable {
     case pushed
     case nothingToPush
     case rejected          // remote moved since fetch (force-with-lease safety check)
@@ -9,32 +9,32 @@ public enum PushOutcome: Sendable, Equatable {
 }
 
 /// Errors surfaced by the jj client that the engine maps to a matter status.
-public enum JJError: Error, Sendable, Equatable {
+public nonisolated enum JJError: Error, Sendable, Equatable {
     case conflict
     case commandFailed(exitCode: Int32, stderr: String)
 }
 
 /// Drives the `jj` CLI for one matter repository. Behind a protocol so the sync
 /// engine can be tested with a fake.
-public protocol JJClient: Sendable {
+public nonisolated protocol JJClient: Sendable {
     /// `jj git fetch` the remote.
-    func fetch(repo: URL, remote: String) async throws
+    nonisolated func fetch(repo: URL, remote: String) async throws
     /// Ensure the remote bookmark is tracked (a fresh clone is non-tracking).
-    func trackBookmark(_ bookmark: String, remote: String, repo: URL) async throws
+    nonisolated func trackBookmark(_ bookmark: String, remote: String, repo: URL) async throws
     /// Read the repo state (conflict + ahead/behind) via templates.
-    func status(bookmark: String, remote: String, repo: URL) async throws -> RepoState
+    nonisolated func status(bookmark: String, remote: String, repo: URL) async throws -> RepoState
     /// Rebase local work onto the fetched remote bookmark position.
-    func rebaseLocalOnto(bookmark: String, remote: String, repo: URL) async throws
+    nonisolated func rebaseLocalOnto(bookmark: String, remote: String, repo: URL) async throws
     /// Push the bookmark to the remote; classify the outcome.
-    func push(bookmark: String, remote: String, repo: URL) async throws -> PushOutcome
+    nonisolated func push(bookmark: String, remote: String, repo: URL) async throws -> PushOutcome
     /// Clone a remote into `dir`.
-    func clone(remoteURL: String, into dir: URL) async throws
+    nonisolated func clone(remoteURL: String, into dir: URL) async throws
     /// Whether `dir` is a valid jj repo.
-    func isValidRepo(_ dir: URL) async -> Bool
+    nonisolated func isValidRepo(_ dir: URL) async -> Bool
 }
 
 /// `JJClient` backed by the `jj` CLI via `CommandRunner`.
-public struct SubprocessJJClient: JJClient {
+public nonisolated struct SubprocessJJClient: JJClient {
     private let runner: any CommandRunning
     private let jj: URL
 
