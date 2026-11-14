@@ -1,5 +1,7 @@
 # Navigator Sync
 
+[![CI](https://github.com/sebsto/navigator-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/sebsto/navigator-sync/actions/workflows/ci.yml)
+
 A small macOS menu bar app that keeps a local work folder in sync with all of
 the [Neon Law Navigator](https://www.neonlaw.com/navigator) matter repositories
 belonging to the signed-in user — so lawyers and AI agents never have to type
