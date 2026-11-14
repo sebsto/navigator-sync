@@ -4,7 +4,7 @@ import Foundation
 /// (`GET /app/api/projects`). `code` is the stable slug used as the on-disk
 /// subfolder name; `repositoryURL` is nil until the Project's forge repository
 /// has been provisioned.
-public struct MatterDescriptor: Sendable, Identifiable, Equatable {
+public nonisolated struct MatterDescriptor: Sendable, Identifiable, Equatable {
     public let id: String
     public let code: String
     public let name: String
@@ -26,11 +26,11 @@ public struct MatterDescriptor: Sendable, Identifiable, Equatable {
     }
 
     /// Only open matters are synced.
-    public var isOpen: Bool { status == "open" }
+    public nonisolated var isOpen: Bool { status == "open" }
 }
 
 /// The signed-in identity reported by `navigator site whoami`.
-public struct Identity: Sendable, Equatable {
+public nonisolated struct Identity: Sendable, Equatable {
     public let email: String
     public let role: String
     public let tokenExpiry: Date?
@@ -44,7 +44,7 @@ public struct Identity: Sendable, Equatable {
 
 /// Why a matter needs the user's attention. Carried by
 /// `MatterStatus.needsAttention`.
-public enum AttentionReason: Sendable, Equatable {
+public nonisolated enum AttentionReason: Sendable, Equatable {
     case conflict
     case authFailure
     case pushRejected          // remote moved since last fetch (force-with-lease block)
@@ -54,7 +54,7 @@ public enum AttentionReason: Sendable, Equatable {
 }
 
 /// The status of one matter, shown in the menu.
-public enum MatterStatus: Sendable, Equatable {
+public nonisolated enum MatterStatus: Sendable, Equatable {
     case upToDate(lastSynced: Date)
     case syncing
     case offline
@@ -64,7 +64,7 @@ public enum MatterStatus: Sendable, Equatable {
 /// A snapshot of a matter's jj repository state, parsed from `jj` template
 /// output. Used by the sync engine to decide whether to rebase/push and whether
 /// to flag a conflict.
-public struct RepoState: Sendable, Equatable {
+public nonisolated struct RepoState: Sendable, Equatable {
     public var hasConflict: Bool
     public var localAheadOfRemote: Bool
     public var remoteChangedSinceLastFetch: Bool
@@ -83,7 +83,7 @@ public struct RepoState: Sendable, Equatable {
 /// User-configurable sync settings. Defaults match the brief: a 60-second
 /// interval, at most 4 concurrent syncs, and `main` as the push target bookmark
 /// (Assumption A1), overridable per matter.
-public struct SyncConfig: Sendable, Equatable {
+public nonisolated struct SyncConfig: Sendable, Equatable {
     public var workFolder: URL?
     public var intervalSeconds: Int
     public var maxParallelSyncs: Int

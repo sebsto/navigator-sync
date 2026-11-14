@@ -1,7 +1,7 @@
 import Foundation
 
 /// The command-line tools Navigator Sync depends on.
-public enum CLIName: String, Sendable, CaseIterable {
+public nonisolated enum CLIName: String, Sendable, CaseIterable {
     case jj
     case navigator
 
@@ -15,7 +15,7 @@ public enum CLIName: String, Sendable, CaseIterable {
 }
 
 /// Failure to locate a required CLI.
-public enum CLILocatorError: Error, Sendable, Equatable {
+public nonisolated enum CLILocatorError: Error, Sendable, Equatable {
     /// The named CLI was found neither on `PATH` nor in the Homebrew fallback.
     /// `installHint` is the command the user can run to install it.
     case missing(cli: CLIName, installHint: String)
@@ -30,7 +30,7 @@ public enum CLILocatorError: Error, Sendable, Equatable {
 ///
 /// The `PATH` string and the file-existence probe are injected so the resolver
 /// can be unit tested without depending on the host's real installation.
-public struct CLILocator: Sendable {
+public nonisolated struct CLILocator: Sendable {
     /// Colon-separated search path (the value of `PATH`).
     private let searchPath: String
     /// Returns true when an executable file exists at the given absolute path.
