@@ -1,25 +1,22 @@
 import SwiftUI
 import AppKit
+import SwiftUI
 import NavigatorSyncCore
 
-/// Navigator Sync — a menu-bar agent (no Dock icon). The onboarding and
-/// settings windows are opened imperatively via NSWindow + NSHostingController
-/// (SwiftUI scenes don't open reliably in an .accessory app), and the menu bar
-/// uses NSStatusItem so its icon can reflect overall state.
-@main
-struct NavigatorSyncApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-
-    var body: some Scene {
-        // No visible scene: the app lives in the menu bar. This empty Settings
-        // scene is never shown (LSUIElement/accessory policy).
-        Settings { EmptyView() }
-    }
-
-    init() {
-        NSApplication.shared.setActivationPolicy(.accessory)
-    }
-}
+/// Navigator Sync — a menu-bar agent (no Dock icon).
+///
+/// There is deliberately no SwiftUI `App`/`Scene`: a `Settings`/`WindowGroup`
+/// scene renders a stray empty window under `swift run` in an accessory app.
+/// Instead `main` builds a plain `NSApplication` with our delegate, which owns
+/// the status item, a popover for the menu content, and the onboarding/settings
+/// windows.
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
+// The delegate lives for the whole process: app.run() below never returns, so
+// this binding is never released.
+let appDelegate = AppDelegate()
+app.delegate = appDelegate
+app.run()
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -27,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let menuModel = MenuModel()
 
     private var statusItem: NSStatusItem?
+    private var popover: NSPopover?
     private var onboardingWindow: NSWindow?
     private var settingsWindow: NSWindow?
 
@@ -48,18 +46,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshTask?.cancel()
     }
 
-    // MARK: - Status item
+    // MARK: - Status item + popover
 
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.image = NSImage(
             systemSymbolName: SFSymbols.menuBarIdle, accessibilityDescription: "Navigator Sync")
-        let menu = NSMenu()
-        let hostingItem = NSMenuItem()
-        hostingItem.view = NSHostingView(rootView: menuContent())
-        menu.addItem(hostingItem)
-        item.menu = menu
+        item.button?.target = self
+        item.button?.action = #selector(togglePopover(_:))
         statusItem = item
+
+        let pop = NSPopover()
+        pop.behavior = .transient
+        pop.contentViewController = NSHostingController(rootView: menuContent())
+        popover = pop
+    }
+
+    @objc private func togglePopover(_ sender: NSStatusBarButton) {
+        guard let popover, let button = statusItem?.button else { return }
+        if popover.isShown {
+            popover.performClose(sender)
+        } else {
+            // Refresh the content to the latest model before showing.
+            popover.contentViewController = NSHostingController(rootView: menuContent())
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func closePopover() {
+        popover?.performClose(nil)
     }
 
     private func updateStatusIcon() {
@@ -67,21 +83,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ? SFSymbols.menuBarAttention : SFSymbols.menuBarIdle
         statusItem?.button?.image = NSImage(
             systemSymbolName: symbol, accessibilityDescription: "Navigator Sync")
-        // Rebuild the hosted menu view so it reflects the latest model.
-        if let menu = statusItem?.menu, let first = menu.items.first {
-            first.view = NSHostingView(rootView: menuContent())
-        }
     }
 
     private func menuContent() -> some View {
         MenuContentView(
             model: menuModel,
             workFolderPath: settings.workFolderPath,
-            onSyncNow: { [weak self] in self?.syncNow() },
+            onSyncNow: { [weak self] in self?.closePopover(); self?.syncNow() },
             onSyncMatter: { [weak self] code in self?.syncNow(code: code) },
             onOpenInFinder: { [weak self] code in self?.openInFinder(code) },
-            onSettings: { [weak self] in self?.showSettings() },
-            onRerunSetup: { [weak self] in self?.showOnboarding() },
+            onSettings: { [weak self] in self?.closePopover(); self?.showSettings() },
+            onRerunSetup: { [weak self] in self?.closePopover(); self?.showOnboarding() },
             onQuit: { NSApp.terminate(nil) }
         )
     }
