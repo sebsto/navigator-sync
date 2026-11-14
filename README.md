@@ -16,38 +16,95 @@ surfacing a clear per-matter status in the menu bar.
 > Status: MVP under active development. See `.kiro/specs/navigator-sync/` for the
 > requirements, design, and task plan.
 
-## Requirements
+## Getting started
+
+Follow these steps once, in order, on an Apple-silicon Mac running macOS 14 or
+later. Each command runs in the Terminal app (press ⌘-Space, type "Terminal",
+press Return).
+
+### 1. Install Homebrew (skip if you already have it)
+
+Homebrew is the package manager used to install the tools below.
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Check it worked:
+
+```sh
+brew --version
+```
+
+### 2. Install the Swift toolchain (Xcode)
+
+Navigator Sync builds with Swift 6.2 or newer. Install Xcode 26 or newer from the
+Mac App Store (it includes the Swift toolchain), then accept its license and
+command-line tools:
+
+```sh
+sudo xcodebuild -license accept
+xcode-select --install   # no-op if already installed
+swift --version          # should report Swift 6.2 or newer
+```
+
+### 3. Install the two helper CLIs
+
+Navigator Sync drives these two command-line tools; it never reimplements them.
+
+```sh
+brew install jj
+brew install neon-law/navigator/navigator
+```
+
+Check both are found:
+
+```sh
+jj --version
+navigator --version
+```
+
+### 4. Sign in to Navigator
+
+Navigator Sync does not handle your password; it uses the Navigator CLI's own
+login. Run this once (it opens your browser):
+
+```sh
+navigator site login --host www.neonlaw.com
+```
+
+Confirm you are signed in:
+
+```sh
+navigator site whoami --host www.neonlaw.com
+```
+
+### 5. Build and run Navigator Sync
+
+```sh
+git clone https://github.com/sebsto/navigator-sync.git
+cd navigator-sync
+swift run NavigatorSync
+```
+
+A Navigator Sync icon appears in the menu bar at the top of your screen, and on
+the first launch an onboarding wizard walks you through choosing a work folder
+and re-checks the steps above. After setup it keeps your matters in sync and
+shows a status for each one in the menu.
+
+The app runs as a menu bar agent with no Dock icon. Signing and notarization are
+out of scope for the MVP, so run it with `swift run` for now.
+
+## Requirements (summary)
 
 - macOS 14 or later, Apple silicon.
-- Swift 6.2+ toolchain (Xcode 26+ / current Swift.org toolchain).
-- Two command-line tools on your `PATH` (or in `/opt/homebrew/bin`):
-  - **Jujutsu** — `brew install jj`
-  - **Navigator CLI** — `brew install neon-law/navigator/navigator`
-- A Navigator account. Sign in once with the CLI:
-  `navigator site login --host www.neonlaw.com`
+- Swift 6.2+ toolchain (Xcode 26 or newer).
+- `jj` and `navigator` on your `PATH` (or in `/opt/homebrew/bin`).
+- A Navigator account, signed in via `navigator site login`.
 
 The app does not manage credentials itself — it relies on your existing `git`,
 `jj`, and `navigator` configuration and only surfaces errors. No file contents
 are logged and there is no telemetry.
-
-## Build
-
-```sh
-swift build
-```
-
-## Run
-
-```sh
-swift run NavigatorSync
-```
-
-On first launch an onboarding wizard walks you through choosing a work folder,
-checking the two CLIs are installed, and confirming you are signed in.
-
-The app runs as a menu bar agent (no Dock icon). A minimal `Info.plist` with
-`LSUIElement` is documented for bundling; signing/notarization are out of scope
-for the MVP.
 
 ## Test
 
