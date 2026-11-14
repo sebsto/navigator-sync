@@ -48,5 +48,13 @@ let package = Package(
             path: "Tests/NavigatorSyncCoreTests",
             swiftSettings: swiftSettings
         ),
+
+        // App-logic tests (onboarding coordinator, settings, readiness).
+        .testTarget(
+            name: "NavigatorSyncAppTests",
+            dependencies: ["NavigatorSync"],
+            path: "Tests/NavigatorSyncAppTests",
+            swiftSettings: swiftSettings
+        ),
     ]
 )
