@@ -1,7 +1,7 @@
 import Foundation
 
 /// A projection of one matter's state for the UI.
-public nonisolated struct MatterView: Sendable, Identifiable, Equatable {
+public struct MatterView: Sendable, Identifiable, Equatable {
     public let id: String
     public let code: String
     public let name: String

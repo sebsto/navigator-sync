@@ -1,13 +1,18 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
-// Shared Swift settings applied to every target: Swift 6 language mode,
-// MemberImportVisibility, and MainActor default isolation. Actors are used only
-// for genuine background/shared-mutable work (the per-matter sync and the
-// scheduler); everything else is MainActor by default.
-let swiftSettings: [SwiftSetting] = [
+// Base settings for every target: Swift 6 language mode + MemberImportVisibility.
+let baseSwiftSettings: [SwiftSetting] = [
     .swiftLanguageMode(.v6),
     .enableUpcomingFeature("MemberImportVisibility"),
+]
+
+// The app and its UI are MainActor by default (SwiftUI is main-actor anyway),
+// so UI types need no annotation. The Core library deliberately does NOT use
+// MainActor default isolation: it is pure data plus background sync actors, so
+// its types stay non-isolated by default and are freely usable from the engine
+// actors without `nonisolated` noise.
+let uiSwiftSettings: [SwiftSetting] = baseSwiftSettings + [
     .defaultIsolation(MainActor.self),
 ]
 
@@ -30,7 +35,7 @@ let package = Package(
                 .product(name: "Subprocess", package: "swift-subprocess"),
             ],
             path: "Sources/NavigatorSyncCore",
-            swiftSettings: swiftSettings
+            swiftSettings: baseSwiftSettings
         ),
 
         // macOS menu-bar app (thin UI over the core).
@@ -38,7 +43,7 @@ let package = Package(
             name: "NavigatorSync",
             dependencies: ["NavigatorSyncCore"],
             path: "Sources/NavigatorSync",
-            swiftSettings: swiftSettings
+            swiftSettings: uiSwiftSettings
         ),
 
         // Unit tests (Swift Testing).
@@ -46,7 +51,7 @@ let package = Package(
             name: "NavigatorSyncCoreTests",
             dependencies: ["NavigatorSyncCore"],
             path: "Tests/NavigatorSyncCoreTests",
-            swiftSettings: swiftSettings
+            swiftSettings: baseSwiftSettings
         ),
 
         // App-logic tests (onboarding coordinator, settings, readiness).
@@ -54,7 +59,7 @@ let package = Package(
             name: "NavigatorSyncAppTests",
             dependencies: ["NavigatorSync"],
             path: "Tests/NavigatorSyncAppTests",
-            swiftSettings: swiftSettings
+            swiftSettings: uiSwiftSettings
         ),
     ]
 )
