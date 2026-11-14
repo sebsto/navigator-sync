@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [scaffold, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & test (macOS, Apple silicon)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select the latest stable Xcode
+        # Pick the newest Xcode installed on the runner (latest Swift toolchain).
+        # The package needs Swift 6.2+ (swift-tools-version 6.2, swift-subprocess 1.x).
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: Build
+        run: swift build
+
+      - name: Test with coverage gate (NavigatorSyncCore >= 80%)
+        # Runs the full Swift Testing suite with coverage and fails the job if
+        # the core library falls below 80% line coverage.
+        run: ./scripts/coverage.sh 80
