@@ -4,12 +4,12 @@ import System
 
 /// The outcome of running a CLI: exit code plus the captured, bounded output.
 /// Output is kept only as diagnostics — no file contents are logged (Req 8).
-public nonisolated struct CommandResult: Sendable, Equatable {
+public struct CommandResult: Sendable, Equatable {
     public let exitCode: Int32
     public let standardOutput: String
     public let standardError: String
 
-    public nonisolated init(exitCode: Int32, standardOutput: String, standardError: String) {
+    public init(exitCode: Int32, standardOutput: String, standardError: String) {
         self.exitCode = exitCode
         self.standardOutput = standardOutput
         self.standardError = standardError
@@ -21,10 +21,10 @@ public nonisolated struct CommandResult: Sendable, Equatable {
 
 /// Raised when a command does not finish within its timeout. The owning task is
 /// cancelled, which triggers the subprocess teardown sequence.
-public nonisolated struct CommandTimeoutError: Error, Sendable, Equatable {
+public struct CommandTimeoutError: Error, Sendable, Equatable {
     public let executable: String
     public let timeout: Duration
-    public nonisolated init(executable: String, timeout: Duration) {
+    public init(executable: String, timeout: Duration) {
         self.executable = executable
         self.timeout = timeout
     }
@@ -32,8 +32,8 @@ public nonisolated struct CommandTimeoutError: Error, Sendable, Equatable {
 
 /// Runs a CLI as a subprocess and returns its collected output. The protocol
 /// keeps `swift-subprocess` out of the clients and lets tests inject a fake.
-public nonisolated protocol CommandRunning: Sendable {
-    nonisolated func run(
+public protocol CommandRunning: Sendable {
+    func run(
         executable: URL,
         arguments: [String],
         workingDirectory: URL?,
@@ -68,7 +68,7 @@ extension CommandRunning {
 /// down rather than leaked. The timeout is enforced with a task group whose
 /// losing branch is cancelled via `cancelAll()`, which cancels the subprocess
 /// task and runs that teardown.
-public nonisolated struct SubprocessCommandRunner: CommandRunning {
+public struct SubprocessCommandRunner: CommandRunning {
     /// Maximum bytes captured per stream.
     private let outputByteLimit: Int
 
@@ -76,7 +76,7 @@ public nonisolated struct SubprocessCommandRunner: CommandRunning {
         self.outputByteLimit = outputByteLimit
     }
 
-    public nonisolated func run(
+    public func run(
         executable: URL,
         arguments: [String],
         workingDirectory: URL?,
